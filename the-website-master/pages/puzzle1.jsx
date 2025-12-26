@@ -28,6 +28,9 @@ import { useGameStore } from '../store/gameStore';
 // Utils
 import { cn, validateCaesarAnswer, delay } from '../lib/utils';
 
+// Audio
+import { useSynthAudio } from '../lib/synthAudio';
+
 // Components
 import MatrixRain from '../components/MatrixRain';
 import FilmGrain from '../components/FilmGrain';
@@ -52,6 +55,9 @@ const EASTER_EGG_WORD = 'ATHENA';
 
 export default function Puzzle1Page() {
     const router = useRouter();
+
+    // Audio
+    const audio = useSynthAudio();
 
     // Store
     const puzzleState = useGameStore((state) => state.puzzles[1]);
@@ -106,9 +112,10 @@ export default function Puzzle1Page() {
             setEasterEggTriggered(true);
             discoverEasterEgg('athenaSecret');
             unlockAchievement('athenaFavorite');
+            audio.playAchievement(); // Play achievement sound
             console.log('[Puzzle1] Athena easter egg discovered!');
         }
-    }, [input, easterEggTriggered, discoverEasterEgg, unlockAchievement]);
+    }, [input, easterEggTriggered, discoverEasterEgg, unlockAchievement, audio]);
 
     /* ─── HANDLE SUBMIT ─── */
     const handleSubmit = useCallback(async (e) => {
@@ -120,6 +127,8 @@ export default function Puzzle1Page() {
         if (isCorrect) {
             setStatus('success');
             completePuzzle(1);
+            audio.playCorrect(); // Play success sound
+            audio.playDoorOpen(); // Epic door sound
 
             // Wait and navigate
             await delay(2000);
@@ -127,12 +136,13 @@ export default function Puzzle1Page() {
         } else {
             setStatus('error');
             recordAttempt(1);
+            audio.playWrong(); // Play error sound
 
             // Reset error state after animation
             await delay(800);
             setStatus('idle');
         }
-    }, [input, status, completePuzzle, recordAttempt, router]);
+    }, [input, status, completePuzzle, recordAttempt, router, audio]);
 
     /* ─── HANDLE INPUT CHANGE ─── */
     const handleInputChange = (e) => {

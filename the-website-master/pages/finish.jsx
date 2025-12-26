@@ -29,6 +29,9 @@ import { useGameStore } from '../store/gameStore';
 // Utils
 import { cn, formatTimeHuman, generateCertificateId, calculateAccuracy } from '../lib/utils';
 
+// Audio
+import { useSynthAudio } from '../lib/synthAudio';
+
 // Components
 import GoldenRain from '../components/GoldenRain';
 import FilmGrain from '../components/FilmGrain';
@@ -77,6 +80,17 @@ export default function FinishPage() {
     const resetGame = useGameStore((state) => state.resetGame);
     const addToLeaderboard = useGameStore((state) => state.addToLeaderboard);
     const leaderboard = useGameStore((state) => state.leaderboard);
+
+    // Audio
+    const audio = useSynthAudio();
+
+    // Start triumphant ambient
+    useEffect(() => {
+        audio.startAmbient('olympus');
+        // Play triumph fanfare on mount
+        setTimeout(() => audio.playTriumph(), 500);
+        return () => audio.stopAmbient();
+    }, [audio]);
 
     const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
     const [activeStatue, setActiveStatue] = useState(1); // Default Athena
@@ -177,6 +191,7 @@ export default function FinishPage() {
             pdf.save(fileName);
 
             alert('🎉 Certificate downloaded successfully!');
+            audio.playAchievement(); // Achievement sound
         } catch (err) {
             console.error('PDF Generation failed:', err);
             alert('Failed to generate certificate. Please try again.');
@@ -496,6 +511,7 @@ export default function FinishPage() {
                                     </button>
                                     <button
                                         onClick={() => {
+                                            audio.playClick();
                                             resetGame();
                                             window.location.href = '/';
                                         }}

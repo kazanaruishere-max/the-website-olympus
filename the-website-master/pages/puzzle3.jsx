@@ -26,6 +26,9 @@ import { useGameStore } from '../store/gameStore';
 // Utils
 import { cn, validateTempleCode, delay, hapticFeedback } from '../lib/utils';
 
+// Audio
+import { useSynthAudio } from '../lib/synthAudio';
+
 // Hyperrealistic Components
 import FilmGrain from '../components/FilmGrain';
 import SmokeParticles from '../components/SmokeParticles';
@@ -58,6 +61,15 @@ export default function Puzzle3Page() {
     const puzzle2Completed = useGameStore((state) => state.puzzles[2].completed);
     const checkTimeAchievements = useGameStore((state) => state.checkTimeAchievements);
     const checkAccuracyAchievements = useGameStore((state) => state.checkAccuracyAchievements);
+
+    // Audio
+    const audio = useSynthAudio();
+
+    // Start ambient
+    useEffect(() => {
+        audio.startAmbient('temple');
+        return () => audio.stopAmbient();
+    }, [audio]);
 
     // Local state
     const [code, setCode] = useState([0, 0, 0, 0]);
@@ -93,6 +105,7 @@ export default function Puzzle3Page() {
         if (status === 'success' || status === 'opening') return;
 
         hapticFeedback(20);
+        audio.playWheelTurn(); // Mechanical sound
 
         setCode((prev) => {
             const newCode = [...prev];
@@ -119,6 +132,9 @@ export default function Puzzle3Page() {
             checkTimeAchievements();
             checkAccuracyAchievements();
 
+            audio.playCorrect(); // Success tone
+            audio.playDoorOpen(); // Big door opening sound
+
             // Door opening sequence
             await delay(800);
             setStatus('opening');
@@ -129,6 +145,7 @@ export default function Puzzle3Page() {
         } else {
             setStatus('error');
             recordAttempt(3);
+            audio.playWrong(); // Error tone
 
             // Reset after shake
             await delay(800);

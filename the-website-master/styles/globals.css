@@ -521,164 +521,205 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════════════════
-     CHAOS LEVEL EFFECTS - Environmental Presence System
+     CHAOS LEVEL EFFECTS - AGGRESSIVE SYSTEM (FINAL)
      
-     Philosophy: "User diam = dunia bereaksi"
-     Higher levels = calmer, more final (not more aggressive)
-     No shake, no flash, no jitter - only subtle environmental awareness
+     Philosophy: "TOTAL BREAKDOWN"
+     Level 1 (3s):  Anxiety Jitter
+     Level 2 (6s):  Hard Shake + RGB Split
+     Level 3 (9s):  Severe Glitch + Skew
+     Level 4 (12s): Invert + Zoom Pulse (Terror)
+     Level 5 (15s): System Failure (Blackout/Drastic)
      
      Applied to body via JavaScript: document.body.classList.add('chaos-level-N')
      ═══════════════════════════════════════════════════════════════════════════ */
 
-  /* Level 0: Complete Silence - User is active */
-  body.chaos-level-0 {
-    /* No visible effect - the room is at peace */
-    transition: filter 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Level 0: Normal */
+  .chaos-level-0 {
+    transform: none;
+    filter: none;
   }
 
-  /* Level 1: First Whisper (10s) - The room notices */
-  body.chaos-level-1 {
-    animation: presence-subtle 8s ease-in-out infinite;
+  /* Level 1: Anxiety Jitter (3s) - Visible vibration */
+  .chaos-level-1 {
+    animation: jitter-anxiety 0.1s infinite;
   }
 
-  @keyframes presence-subtle {
-
-    0%,
-    100% {
-      filter: brightness(1) saturate(1);
-    }
-
-    50% {
-      filter: brightness(0.99) saturate(0.98);
-    }
-  }
-
-  /* Level 2: Acknowledgment (20s) - Presence confirmed */
-  body.chaos-level-2 {
-    animation: presence-aware 10s ease-in-out infinite;
-  }
-
-  @keyframes presence-aware {
-
-    0%,
-    100% {
-      filter: brightness(1) saturate(1) sepia(0);
-    }
-
-    33% {
-      filter: brightness(0.98) saturate(0.96) sepia(0.02);
-    }
-
-    66% {
-      filter: brightness(0.995) saturate(0.99) sepia(0.01);
-    }
-  }
-
-  /* Level 3: Environment Aware (30s) - "The room remembers" */
-  body.chaos-level-3 {
-    animation: presence-remembers 12s ease-in-out infinite;
-  }
-
-  @keyframes presence-remembers {
-
-    0%,
-    100% {
-      filter: brightness(1) saturate(1) sepia(0);
+  @keyframes jitter-anxiety {
+    0% {
+      transform: translate(0, 0);
     }
 
     25% {
-      filter: brightness(0.97) saturate(0.94) sepia(0.03);
+      transform: translate(-2px, 2px);
     }
 
     50% {
-      filter: brightness(0.98) saturate(0.96) sepia(0.02);
+      transform: translate(2px, -1px);
     }
 
     75% {
-      filter: brightness(0.96) saturate(0.93) sepia(0.04);
+      transform: translate(-1px, 2px);
+    }
+
+    100% {
+      transform: translate(0, 0);
     }
   }
 
-  /* Subtle ambient vignette for level 3+ */
-  body.chaos-level-3::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    background: radial-gradient(ellipse 80% 60% at center,
-        transparent 40%,
-        rgba(0, 0, 0, 0.08) 100%);
-    opacity: 0;
-    animation: vignette-breathe 15s ease-in-out infinite;
+  /* Level 2: Hard Shake + RGB Split (6s) - Violent shaking */
+  .chaos-level-2 {
+    animation: shake-violent 0.15s infinite, rgb-split-hard 0.2s infinite;
   }
 
-  @keyframes vignette-breathe {
+  @keyframes shake-violent {
+    0% {
+      transform: translate(4px, 2px) rotate(0deg);
+    }
 
-    0%,
+    20% {
+      transform: translate(-4px, -2px) rotate(-1deg);
+    }
+
+    40% {
+      transform: translate(-4px, 2px) rotate(1deg);
+    }
+
+    60% {
+      transform: translate(4px, -2px) rotate(0deg);
+    }
+
+    80% {
+      transform: translate(-2px, 4px) rotate(-1deg);
+    }
+
     100% {
-      opacity: 0.3;
+      transform: translate(2px, -3px) rotate(1deg);
+    }
+  }
+
+  @keyframes rgb-split-hard {
+    0% {
+      text-shadow: -4px 0 #ff0000, 4px 0 #0000ff;
     }
 
     50% {
-      opacity: 0.5;
+      text-shadow: 4px 0 #ff0000, -4px 0 #0000ff;
+    }
+
+    100% {
+      text-shadow: -4px 0 #ff0000, 4px 0 #0000ff;
     }
   }
 
-  /* Level 4: Calm Finality (40s) - "Nothing escapes attention" */
-  body.chaos-level-4 {
-    animation: presence-final 15s ease-in-out infinite;
+  /* Level 3: Severe Glitch + Skew (9s) - Structural break */
+  .chaos-level-3 {
+    animation: glitch-skew-hard 0.2s infinite linear;
+    filter: contrast(1.5) brightness(1.2) hue-rotate(90deg);
   }
 
-  @keyframes presence-final {
+  @keyframes glitch-skew-hard {
+    0% {
+      transform: skew(0deg);
+      clip-path: inset(0 0 0 0);
+    }
 
-    0%,
+    20% {
+      transform: skew(-20deg);
+      clip-path: inset(10% 0 80% 0);
+    }
+
+    40% {
+      transform: skew(20deg);
+      clip-path: inset(40% 0 10% 0);
+    }
+
+    60% {
+      transform: skew(-10deg);
+      clip-path: inset(80% 0 5% 0);
+    }
+
+    80% {
+      transform: skew(10deg);
+      clip-path: inset(10% 0 20% 0);
+    }
+
     100% {
-      filter: brightness(0.97) saturate(0.92) sepia(0.03);
+      transform: skew(0deg);
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  /* Level 4: Invert + Zoom Pulse (12s) - TERROR */
+  .chaos-level-4 {
+    animation: terror-pulse 0.8s infinite cubic-bezier(0.1, 0.9, 0.2, 1);
+    filter: invert(1) grayscale(1) contrast(3);
+  }
+
+  @keyframes terror-pulse {
+    0% {
+      transform: scale(1);
+    }
+
+    10% {
+      transform: scale(1.15) rotate(2deg);
+    }
+
+    20% {
+      transform: scale(1.2) rotate(-2deg);
+    }
+
+    40% {
+      transform: scale(1.05);
+    }
+
+    60% {
+      transform: scale(1.1);
+    }
+
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /* Level 5: System Failure (15s) - TOTAL BLACKOUT/NOISE */
+  .chaos-level-5 {
+    animation: flash-fail 0.1s infinite;
+    background: #000;
+  }
+
+  /* Additional pseudo-element for noise/static overlay at Level 5 */
+  .chaos-level-5::before {
+    content: "SYSTEM FAILURE";
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 5rem;
+    color: red;
+    font-family: monospace;
+    z-index: 9999;
+    font-weight: bold;
+    pointer-events: none;
+  }
+
+  @keyframes flash-fail {
+    0% {
+      filter: brightness(0) invert(0);
     }
 
     50% {
-      filter: brightness(0.95) saturate(0.88) sepia(0.05);
+      filter: brightness(2) invert(1);
+    }
+
+    100% {
+      filter: brightness(0) invert(0);
     }
   }
 
-  body.chaos-level-4::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    background: radial-gradient(ellipse 70% 50% at center,
-        transparent 30%,
-        rgba(0, 0, 0, 0.12) 100%);
-    animation: vignette-breathe 12s ease-in-out infinite;
-  }
-
-  /* Level 5: Ultimate Reduction (50s+) - "Ω" - Maximum calm, absolute presence */
-  body.chaos-level-5 {
-    /* No animation - complete stillness at maximum level */
-    filter: brightness(0.94) saturate(0.85) sepia(0.06);
-    transition: filter 3s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  body.chaos-level-5::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    background: radial-gradient(ellipse 60% 45% at center,
-        transparent 25%,
-        rgba(0, 0, 0, 0.18) 100%);
-    /* Static vignette - the room has settled */
-    opacity: 0.7;
-  }
-
-  /* ═══════════════════════════════════════════════════════════════════════════
-     RESET TRANSITION - Instant calm when user returns
-     ═══════════════════════════════════════════════════════════════════════════ */
-  body:not(.chaos-level-1):not(.chaos-level-2):not(.chaos-level-3):not(.chaos-level-4):not(.chaos-level-5) {
+  /* RESET TRANSITION */
+  #chaos-outcome:not(.chaos-level-1):not(.chaos-level-2):not(.chaos-level-3):not(.chaos-level-4):not(.chaos-level-5) {
+    transform: none;
     filter: none;
-    transition: filter 0.3s ease-out;
+    transition: all 0.5s ease-out;
   }
 }

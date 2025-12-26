@@ -15,6 +15,9 @@ import { useGameStore } from '../store/gameStore';
 // Utils
 import { cn } from '../lib/utils';
 
+// Audio
+import { useSynthAudio } from '../lib/synthAudio';
+
 // Assets
 // Assuming sound assets exist or will be placeholders
 // const [playClick] = useSound('/sounds/click.mp3');
@@ -22,6 +25,15 @@ import { cn } from '../lib/utils';
 export default function Puzzle2() {
     const router = useRouter();
     const { completePuzzle, puzzles, gameStarted, startPuzzle } = useGameStore();
+
+    // Audio
+    const audio = useSynthAudio();
+
+    // Start ambient
+    useEffect(() => {
+        audio.startAmbient('temple');
+        return () => audio.stopAmbient();
+    }, [audio]);
 
     // ─── ROUTE PROTECTION ───
     const puzzle1Completed = puzzles[1]?.completed;
@@ -51,17 +63,20 @@ export default function Puzzle2() {
     const handleNodeClick = (id) => {
         if (status === 'success') return;
 
-        // playClick();
+        // Audio click
+        audio.playClick();
 
         // Check availability (must be next in sequence)
         const nextIndex = sequence.length;
         if (id === CORRECT_SEQUENCE[nextIndex]) {
             const newSequence = [...sequence, id];
             setSequence(newSequence);
+            audio.playPatternSelect(); // Connection sound
 
             // WIN CONDITION
             if (newSequence.length === CORRECT_SEQUENCE.length) {
                 setStatus('success');
+                audio.playTriumph(); // Victory sound
                 setTimeout(() => {
                     completePuzzle(2);
                     // router.push('/puzzle3'); // Auto-nav or manual? Let's show success first
@@ -70,6 +85,7 @@ export default function Puzzle2() {
         } else {
             // ERROR
             setStatus('error');
+            audio.playWrong(); // Error sound
             setTimeout(() => {
                 setSequence([]);
                 setStatus('idle');
@@ -181,6 +197,8 @@ export default function Puzzle2() {
                                             : "bg-black/40 text-cyan-400 hover:bg-cyan-900/40 hover:border-cyan-400/50 hover:scale-105",
                                         status === 'error' && "animate-shake border-red-500 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.5)]"
                                     )}
+                                    // Audio Hover
+                                    onMouseEnter={() => audio.playHover()}
                                     style={{ left: `${node.x}%`, top: `${node.y}%` }}
                                 >
                                     {node.label}

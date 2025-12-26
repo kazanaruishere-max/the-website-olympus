@@ -40,6 +40,9 @@ import CrackOverlay from '../components/CrackOverlay';
 // Chaos Text System
 import ChaosText from '../components/ChaosText';
 
+// Audio System
+import { useSynthAudio } from '../lib/synthAudio';
+
 /* ─── CHAOS PHASES ─── */
 const PHASES = {
   CALM: 'calm',
@@ -80,6 +83,9 @@ export default function LandingPage() {
   const startGame = useGameStore((state) => state.startGame);
   const gameStarted = useGameStore((state) => state.gameStarted);
 
+  // Audio
+  const audio = useSynthAudio();
+
   // Chaos state from store
   const chaosTriggered = useGameStore((state) => state.chaosTriggered);
   const chaosLevel = useGameStore((state) => state.chaosLevel);
@@ -99,6 +105,14 @@ export default function LandingPage() {
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
   const chaosTimerRef = useRef(null);
+  const lastPresenceLevel = useRef(0);
+  const isTransitioningRef = useRef(false); // Ref for transitioning
+
+  // Time-based chaos state
+  // Initialize at Level 1 if chaos is triggered so effects are INSTANT
+  const [presenceLevel, setPresenceLevel] = useState(chaosTriggered ? 1 : 0);
+  const presenceTimerRef = useRef(null);
+  const pageLoadTimeRef = useRef(Date.now());
 
   // Text mutations based on chaos level - observational, reflective language
   // "Omega tidak berbicara pada user. Omega berbicara pada ruang."
@@ -111,13 +125,9 @@ export default function LandingPage() {
     'Ω',                             // Level 5: Ultimate reduction to essence
   ], []);
 
-  // Client-side mount + Route Protection
+  // Client-side mount & checks
   useEffect(() => {
     setMounted(true);
-
-    // Route protection removed - chaos presence runs on this page directly
-    // User activity does not reset chaos - only clicking Omega exits
-
     // Check WebGL support
     try {
       const canvas = document.createElement('canvas');
@@ -126,38 +136,61 @@ export default function LandingPage() {
     } catch (e) {
       setWebglSupported(false);
     }
+  }, []);
+
+  // REDIRECT LOGIC:
+  // ALWAYS start at Profile if chaos hasn't been triggered (Hub is hidden).
+  // This ensures on refresh/fresh load, we go to the "Front" company page.
+  useEffect(() => {
+    // Skip redirect if we are in the middle of a transition (e.g. going to Puzzle 1)
+    if (isTransitioningRef.current) return;
+
+    if (!chaosTriggered) {
+      if (typeof window !== 'undefined') {
+        // USE HARD REDIRECT: Clears history and forces a fresh load of the profile
+        // This prevents "back button" exploits and ensures cleaner state
+        window.location.replace('/profile');
+      }
+      return;
+    }
 
     // If coming from /profile with chaos, trigger it
     if (chaosTriggered) {
       setPhase(PHASES.REVELATION);
     }
-  }, [chaosTriggered, gameStarted, router]);
+  }, [chaosTriggered]);
 
-  // ─── TIME-BASED CHAOS PRESENCE ───
-  // Chaos escalates based on TIME ON PAGE, not inactivity
-  // User activity (mouse, scroll, keys) does NOT reset - only clicking Omega exits
-  const [presenceLevel, setPresenceLevel] = useState(0);
-  const presenceTimerRef = useRef(null);
-  const pageLoadTimeRef = useRef(Date.now());
-
-  // Start presence escalation on mount (based on time, not activity)
+  // TIME-BASED CHAOS PRESENCE SCALING
   useEffect(() => {
-    if (gameStarted) return; // No chaos if game already started
-
     // Reset page load time on mount
     pageLoadTimeRef.current = Date.now();
+
+    // If chaos triggered, ensure we start with visual impact
+    if (chaosTriggered) {
+      setPresenceLevel(1);
+    }
 
     // Presence escalation timer - check every 1 second for precise timing
     presenceTimerRef.current = setInterval(() => {
       const timeOnPage = Date.now() - pageLoadTimeRef.current;
       const secondsOnPage = Math.floor(timeOnPage / 1000);
 
-      // Start escalation after 10 seconds on page
-      if (secondsOnPage >= 10) {
-        // Calculate level based on time (every 10 seconds = +1 level)
-        const newLevel = Math.min(Math.floor((secondsOnPage - 10) / 10) + 1, 5);
+      // Start escalation faster (after 3 seconds) for immediate feedback
+      if (secondsOnPage >= 3) {
+        // Calculate level based on time (every 3 seconds = +1 level)
+        const newLevel = Math.min(Math.floor((secondsOnPage - 3) / 3) + 1, 5);
         setPresenceLevel(prev => {
-          if (newLevel > prev) return newLevel;
+          if (newLevel > prev) {
+            // Play chaos sound (safely)
+            try {
+              if (audio && typeof audio.playChaosEscalation === 'function') {
+                audio.playChaosEscalation(newLevel);
+              }
+            } catch (err) {
+              // Ignore audio errors during chaos
+            }
+            return newLevel;
+          }
           return prev;
         });
       }
@@ -168,72 +201,51 @@ export default function LandingPage() {
         clearInterval(presenceTimerRef.current);
       }
     };
-  }, [gameStarted]);
-
-  // Apply presence chaos effects (CSS only - text handled by ChaosText component)
-  useEffect(() => {
-    if (presenceLevel === 0) return;
-
-    // Apply body class for CSS effects
-    if (typeof document !== 'undefined') {
-      // Remove previous levels first
-      for (let i = 0; i <= 5; i++) {
-        if (i !== presenceLevel) {
-          document.body.classList.remove(`chaos-level-${i}`);
-        }
-      }
-      document.body.classList.add(`chaos-level-${presenceLevel}`);
-    }
-  }, [presenceLevel]);
-
-  /* ─── CHAOS TIMER (Original phase system) ─── */
-  useEffect(() => {
-    if (gameStarted) {
-      setPhase(PHASES.REVELATION);
-      return;
-    }
-
-    // If chaos was triggered from /profile, skip to revelation
-    if (chaosTriggered) {
-      setPhase(PHASES.REVELATION);
-      return;
-    }
-
-    startTimeRef.current = Date.now();
-
-    const updatePhase = () => {
-      const elapsed = Date.now() - startTimeRef.current;
-
-      if (elapsed >= PHASE_TIMING[PHASES.EXTREME]) {
-        setPhase(PHASES.EXTREME);
-      } else if (elapsed >= PHASE_TIMING[PHASES.REVELATION]) {
-        setPhase(PHASES.REVELATION);
-      } else if (elapsed >= PHASE_TIMING[PHASES.CHAOS]) {
-        setPhase(PHASES.CHAOS);
-      } else if (elapsed >= PHASE_TIMING[PHASES.DECAY]) {
-        setPhase(PHASES.DECAY);
-      }
-    };
-
-    timerRef.current = setInterval(updatePhase, 100);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
   }, [gameStarted, chaosTriggered]);
+
+  // Apply presence chaos effects via className on main container (logic moved to render)
+
 
   /* ─── HANDLE OMEGA CLICK ─── */
   const handleOmegaClick = useCallback(() => {
     if (phase !== PHASES.REVELATION && phase !== PHASES.EXTREME) return;
 
+    // PREVENT REDIRECT BACK TO PROFILE
+    isTransitioningRef.current = true;
+
+    // Audio
+    audio.playClick();
+    audio.playDoorOpen(); // Epic sound for entering
+
+    // Start transition
     setHasInteracted(true);
     resetChaos(); // Clear chaos state
     startGame();
 
     setTimeout(() => {
       router.push('/puzzle1');
-    }, 800);
-  }, [phase, startGame, router, resetChaos]);
+    }, 2000); // Increased delay for sound/animation
+  }, [phase, startGame, router, resetChaos, audio]);
+
+  /* ─── START AMBIENT ON INTERACTION ─── */
+  useEffect(() => {
+    const startAmbient = () => {
+      // Only start if not navigating away
+      if (!hasInteracted) {
+        audio.startAmbient('olympus');
+      }
+      window.removeEventListener('click', startAmbient);
+      window.removeEventListener('keydown', startAmbient);
+    };
+
+    window.addEventListener('click', startAmbient);
+    window.addEventListener('keydown', startAmbient);
+
+    return () => {
+      window.removeEventListener('click', startAmbient);
+      window.removeEventListener('keydown', startAmbient);
+    };
+  }, [audio, hasInteracted]);
 
   // Map phase names for 3D scene
   const scenePhase = useMemo(() => {
@@ -254,6 +266,15 @@ export default function LandingPage() {
 
   if (!mounted) return null;
 
+  // STRICT REDIRECT GUARD: 
+  // If chaos is NOT triggered, render NOTHING while we redirect to /profile.
+  // This prevents any "flash" of the Landing Page content.
+  if (!chaosTriggered && !isTransitioningRef.current) {
+    return (
+      <div className="fixed inset-0 bg-white z-[9999]" /> // Blank white screen to match Profile background
+    );
+  }
+
   return (
     <>
       <Head>
@@ -261,9 +282,12 @@ export default function LandingPage() {
       </Head>
 
       <div
+        id="chaos-outcome" // Identified target for chaos
         className={cn(
           'min-h-screen relative overflow-hidden',
           'transition-all duration-1000',
+          // Dynamically adding chaos level classes here
+          presenceLevel > 0 ? `chaos-level-${presenceLevel}` : ''
         )}
         style={{
           background: phase === PHASES.CALM
@@ -340,6 +364,7 @@ export default function LandingPage() {
                       {['Products', 'Solutions', 'Developers', 'Company'].map((item) => (
                         <button
                           key={item}
+                          onMouseEnter={() => audio.playHover()}
                           className="text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors"
                         >
                           {item}
@@ -349,10 +374,17 @@ export default function LandingPage() {
 
                     {/* CTA */}
                     <div className="flex items-center gap-3">
-                      <button className="text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                      <button
+                        onMouseEnter={() => audio.playHover()}
+                        className="text-[13px] font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                      >
                         Sign in
                       </button>
-                      <button className="px-4 py-2 rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20">
+                      <button
+                        onMouseEnter={() => audio.playHover()}
+                        onClick={() => audio.playClick()}
+                        className="px-4 py-2 rounded-lg bg-gray-900 text-white text-[13px] font-medium hover:bg-gray-800 transition-colors shadow-lg shadow-gray-900/20"
+                      >
                         Get Started
                       </button>
                     </div>
@@ -408,11 +440,19 @@ export default function LandingPage() {
                     transition={{ delay: 0.5 }}
                     className="flex flex-wrap justify-center gap-4 pt-4"
                   >
-                    <button className="group relative px-8 py-4 rounded-xl bg-gray-900 text-white font-medium overflow-hidden transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-gray-900/30">
+                    <button
+                      onMouseEnter={() => audio.playHover()}
+                      onClick={() => audio.playClick()}
+                      className="group relative px-8 py-4 rounded-xl bg-gray-900 text-white font-medium overflow-hidden transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-gray-900/30"
+                    >
                       <span className="relative z-10">Start Free Trial</span>
                       <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </button>
-                    <button className="px-8 py-4 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all">
+                    <button
+                      onMouseEnter={() => audio.playHover()}
+                      onClick={() => audio.playClick()}
+                      className="px-8 py-4 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 hover:border-gray-300 transition-all"
+                    >
                       Watch Demo →
                     </button>
                   </motion.div>
@@ -498,7 +538,11 @@ export default function LandingPage() {
                 disabled={hasInteracted}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                whileHover={{ scale: 1.1 }}
+                whileHover={{
+                  scale: 1.1,
+                  transition: { duration: 0.2 }
+                }}
+                onMouseEnter={() => audio.playHover()}
                 whileTap={{ scale: 0.95 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 20 }}
                 className={cn(

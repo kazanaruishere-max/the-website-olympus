@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Head from 'next/head';
 import { cn } from '../lib/utils';
 import { useGameStore } from '../store/gameStore';
+import { useSynthAudio } from '../lib/synthAudio';
 
 /* ─── CHAOS STAGES ─── */
 const CHAOS_STAGES = {
@@ -27,6 +28,8 @@ const CHAOS_STAGES = {
 
 /* ─── CHAOS OVERLAY COMPONENT ─── */
 function ChaosOverlay({ stage, onComplete }) {
+    const audio = useSynthAudio();
+
     useEffect(() => {
         if (stage === CHAOS_STAGES.IDLE) return;
 
@@ -36,6 +39,17 @@ function ChaosOverlay({ stage, onComplete }) {
             [CHAOS_STAGES.SCRAMBLE]: 1000,
             [CHAOS_STAGES.REDIRECT]: 500,
         };
+
+        // Audio triggers based on stage
+        if (stage === CHAOS_STAGES.GLITCH) audio.playGlitch();
+        if (stage === CHAOS_STAGES.CRACK) {
+            audio.playWrong(); // Dissonant crack sound
+            audio.playGlitch();
+        }
+        if (stage === CHAOS_STAGES.SCRAMBLE) {
+            audio.playChaosEscalation(4);
+            audio.playGlitch();
+        }
 
         const timer = setTimeout(() => {
             const stages = Object.values(CHAOS_STAGES);
@@ -211,6 +225,9 @@ export default function ProfilePage() {
     const [chaosStage, setChaosStage] = useState(CHAOS_STAGES.IDLE);
     const [mounted, setMounted] = useState(false);
 
+    // Audio
+    const audio = useSynthAudio();
+
     useEffect(() => {
         setMounted(true);
     }, []);
@@ -228,8 +245,10 @@ export default function ProfilePage() {
     }, [router, triggerChaosStore]);
 
     const triggerChaos = useCallback(() => {
+        audio.playClick();
+        audio.playChaosEscalation(1); // Start tension
         setChaosStage(CHAOS_STAGES.GLITCH);
-    }, []);
+    }, [audio]);
 
     if (!mounted) return null;
 
@@ -260,6 +279,7 @@ export default function ProfilePage() {
                             {['Product', 'Pricing', 'Docs', 'Blog'].map((item) => (
                                 <button
                                     key={item}
+                                    onMouseEnter={() => audio.playHover()}
                                     className="text-sm text-gray-600 hover:text-gray-900 transition-colors font-medium"
                                 >
                                     {item}
@@ -269,11 +289,15 @@ export default function ProfilePage() {
 
                         {/* CTA */}
                         <div className="flex items-center gap-4">
-                            <button className="text-sm text-gray-600 hover:text-gray-900 font-medium">
+                            <button
+                                onMouseEnter={() => audio.playHover()}
+                                className="text-sm text-gray-600 hover:text-gray-900 font-medium"
+                            >
                                 Sign in
                             </button>
                             <button
                                 onClick={triggerChaos}
+                                onMouseEnter={() => audio.playHover()}
                                 className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-all hover:scale-105 active:scale-95"
                             >
                                 View Demo

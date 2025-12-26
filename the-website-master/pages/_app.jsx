@@ -21,8 +21,8 @@ import '../styles/globals.css';
 // Store
 import { useGameStore } from '../store/gameStore';
 
-// Audio (lazy import)
-let audioManager = null;
+// Audio (lazy import - Web Audio API based)
+let synthAudio = null;
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter();
@@ -35,19 +35,19 @@ export default function MyApp({ Component, pageProps }) {
     if (isAudioInitialized) return;
 
     try {
-      const { default: audio } = await import('../lib/audio');
-      audioManager = audio;
-      if (audioManager) {
-        audioManager.init();
+      const { default: audio } = await import('../lib/synthAudio');
+      synthAudio = audio;
+      if (synthAudio) {
+        synthAudio.init();
         // Sync with store settings
         if (!settings.audioEnabled) {
-          audioManager.disable();
+          synthAudio.disable();
         }
-        audioManager.setVolume(settings.volume);
+        synthAudio.setVolume(settings.volume);
       }
       setIsAudioInitialized(true);
     } catch (e) {
-      console.warn('[App] Audio initialization failed:', e);
+      console.warn('[App] SynthAudio initialization failed:', e);
     }
   }, [isAudioInitialized, settings]);
 

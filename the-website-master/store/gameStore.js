@@ -394,7 +394,7 @@ export const useGameStore = create(
                 }
             }),
             partialize: (state) => ({
-                // Only persist these fields
+                // Only persist specific fields
                 puzzles: state.puzzles,
                 achievements: state.achievements,
                 easterEggs: state.easterEggs,
@@ -404,6 +404,7 @@ export const useGameStore = create(
                 gameEndTime: state.gameEndTime,
                 currentPuzzle: state.currentPuzzle,
                 gameStarted: state.gameStarted,
+                // Do NOT persist chaos state - it should reset on reload
             }),
         }
     )
