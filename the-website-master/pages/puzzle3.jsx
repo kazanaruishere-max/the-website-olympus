@@ -4,8 +4,6 @@
  * ═══════════════════════════════════════════════════════════════════════════
  * 
  * Theme: Ancient Temple
- * Challenge: 4-digit code (3729)
- * 
  * Design (Gemini 3 Pro):
  * - Procedural "Divine Fire" CSS animation
  * - Stone texture overlays
