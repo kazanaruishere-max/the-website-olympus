@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+    <title>vinrex alomani: t-rex runner</title>
+
+    <link rel="stylesheet" href="/vinrex/index.css">
+    <link
+        href="https://fonts.googleapis.com/css?family=Open+Sans"
+        rel="stylesheet"
+    >
+
+    <script src="/vinrex/index.js"></script>
+    <script src="/vinrex/assets/sound-base64.js"></script>
+
+    <script>
+        window.getSoundDataUrl = function (name) {
+            if (window.SOUNDS_BASE64 && window.SOUNDS_BASE64[name]) {
+                return window.SOUNDS_BASE64[name];
+            }
+            return null;
+        };
+
+        window.createAudioFromKey = function (name) {
+            var url = window.getSoundDataUrl(name);
+            if (!url) return null;
+
+            try {
+                var audio = new Audio(url);
+                audio.preload = "auto";
+                return audio;
+            } catch (e) {
+                return null;
+            }
+        };
+    </script>
+</head>
+
+<body id="t" class="offline">
+    <div id="messageBox" class="sendmessage">
+        <h1 style="text-align:center;font-family:'Open Sans',sans-serif;">
+            Press Space to start
+        </h1>
+        <p style="text-align:center;font-family:'Open Sans',sans-serif;">
+            Dibuat oleh github.com/RenzMc
+        <p>
+        <div class="niokbutton" onclick="okbuttonsend()"></div>
+    </div>
+
+    <div id="main-frame-error" class="interstitial-wrapper">
+        <div id="main-content">
+            <div class="icon icon-offline"></div>
+        </div>
+
+        <div id="offline-resources">
+            <img
+                id="offline-resources-1x"
+                src="/vinrex/assets/default_100_percent/100-offline-sprite.png"
+            >
+            <img
+                id="offline-resources-2x"
+                src="/vinrex/assets/default_200_percent/200-offline-sprite.png"
+            >
+
+            <template id="audio-resources">
+                <audio id="offline-sound-press"></audio>
+                <audio id="offline-sound-hit"></audio>
+                <audio id="offline-sound-reached"></audio>
+            </template>
+
+            <script>
+                (function () {
+                    function applySounds() {
+                        var template = document.getElementById("audio-resources");
+                        if (!template) return;
+
+                        var audios = template.content
+                            ? template.content.querySelectorAll("audio")
+                            : template.querySelectorAll("audio");
+
+                        for (var i = 0; i < audios.length; i++) {
+                            var audio = audios[i];
+                            if (window.SOUNDS_BASE64 && window.SOUNDS_BASE64[audio.id]) {
+                                audio.src = window.SOUNDS_BASE64[audio.id];
+                            }
+                        }
+                    }
+
+                    if (document.readyState === "loading") {
+                        document.addEventListener("DOMContentLoaded", applySounds);
+                    } else {
+                        applySounds();
+                    }
+                })();
+            </script>
+        </div>
+    </div>
+
+    <script>
+        document.onkeydown = function (event) {
+            event = event || window.event;
+            if (event.keyCode === 32) {
+                var box = document.getElementById("messageBox");
+                box.style.visibility = "hidden";
+            }
+        };
+    </script>
+</body>
+</html>

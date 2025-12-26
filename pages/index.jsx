@@ -18,6 +18,16 @@ export default function Index() {
             DOOM
           </button>
         </Link>
+        <Link href="/vinrex/index.html">
+          <button style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img 
+              src="/vinrex/assets/default_100_percent/100-error-offline.png" 
+              alt="Vinrex Icon" 
+              style={{ width: '24px', height: '24px' }}
+            />
+            VINREX GAME
+          </button>
+        </Link>
         <Link href="/gabut">
           <button>gabut</button>
         </Link>
