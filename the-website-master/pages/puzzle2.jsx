@@ -53,10 +53,7 @@ export default function Puzzle2() {
     const [sequence, setSequence] = useState([]);
     const [status, setStatus] = useState('idle'); // idle, error, success
 
-    // Correct sequence: Alpha -> Beta -> Gamma -> Delta -> Epsilon -> Zeta -> Eta -> Theta -> Iota
-    // (Simplification: 1, 2, 3... or specific pattern)
-    // Let's assume a pattern: 1-4-7-2-5-8 (The "Orion" pattern or similar)
-    // For now, let's keep it simple: Ascending order 1-9 to "Draw the Constellation"
+
     const CORRECT_SEQUENCE = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
     // Handle Node Click
